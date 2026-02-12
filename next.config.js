@@ -6,7 +6,7 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === 'production',
   },
   images: {
-    domains: ['images.unsplash.com', 'res.cloudinary.com'],
+    unoptimized: false,
   },
 }
 

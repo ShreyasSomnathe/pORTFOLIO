@@ -1,184 +1,115 @@
 'use client'
 
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { TrendingUp, Activity, Shield, Zap } from 'lucide-react'
+import { useRef } from 'react'
+import { motion, useInView } from 'framer-motion'
+import { TrendingUp, Activity, Server, BookOpen, ExternalLink } from 'lucide-react'
 
-interface Strategy {
-  id: string
-  name: string
-  type: string
-  description: string
-  metrics: {
-    return: number
-    sharpe: number
-    winRate: number
-    trades: number
-  }
-  icon: any
-  color: string
-}
-
-const strategies: Strategy[] = [
+const projects = [
   {
-    id: '1',
-    name: 'Momentum Alpha',
-    type: 'Trend Following',
-    description: 'Multi-timeframe momentum system leveraging regime detection and dynamic position sizing',
-    metrics: {
-      return: 124.5,
-      sharpe: 2.8,
-      winRate: 67.3,
-      trades: 1247,
-    },
+    id: 'cl-ml-system',
+    name: 'Crude Oil Forward Curve ML Trading System',
+    type: 'Production Trading System',
+    description: 'Production ML system for crude calendar spread trading using PCA of forward curve (level/slope/curvature), VAR for lead-lag relationships, and Kalman filtering for regime detection. Integrated EIA, FRED, Cushing inventory, and refinery data across 3 live strategies with FastAPI execution and PostgreSQL.',
+    tags: ['PCA', 'VAR', 'Kalman Filter', 'FastAPI', 'PostgreSQL', 'EIA/FRED'],
+    metrics: { sharpe: '3.4', profits: '$200K+', strategies: '3 Live', roi: '50%' },
     icon: TrendingUp,
-    color: 'from-cyan-500 to-blue-600',
+    gradient: 'from-cyan-500/20 to-blue-600/20',
+    accentColor: 'text-cyan-400',
+    featured: true,
   },
   {
-    id: '2',
-    name: 'Mean Reversion Core',
-    type: 'Statistical Arbitrage',
-    description: 'Pairs trading with cointegration analysis and adaptive threshold optimization',
-    metrics: {
-      return: 92.1,
-      sharpe: 3.2,
-      winRate: 71.8,
-      trades: 2891,
-    },
+    id: 'quant-engine',
+    name: 'Quantitative Trading Analysis Engine',
+    type: 'Research Platform',
+    description: 'Python platform for high-frequency CL futures analysis (1.44M rows, 842 patterns) with Shannon/Renyi/Tsallis entropy, chaos theory (Lyapunov exponents, Grassberger-Procaccia), Markov chain models, and network topology analysis. Risk frameworks: Kelly Criterion, VaR/CVaR, Sharpe optimization.',
+    tags: ['Entropy', 'Chaos Theory', 'Markov Chains', 'Network Topology', 'VaR/CVaR'],
+    metrics: { rows: '1.44M', patterns: '842', methods: '10+', assets: 'CL Futures' },
     icon: Activity,
-    color: 'from-purple-500 to-pink-600',
+    gradient: 'from-purple-500/20 to-pink-600/20',
+    accentColor: 'text-purple-400',
+    featured: false,
   },
   {
-    id: '3',
-    name: 'Volatility Harvester',
-    type: 'Options Strategy',
-    description: 'Systematic delta-neutral options strategies with gamma scalping',
-    metrics: {
-      return: 78.4,
-      sharpe: 2.4,
-      winRate: 64.2,
-      trades: 543,
-    },
-    icon: Shield,
-    color: 'from-emerald-500 to-teal-600',
+    id: 'trading-infra',
+    name: 'Energy Trading Infrastructure & Dashboard',
+    type: 'Full-Stack Platform',
+    description: 'Full-stack trading infrastructure with Python strategy engine (mean-reversion, momentum, volume breakout), FastAPI + WebSocket backend, and React dashboard with live P&L, order blotter, TT API integration, strategy metrics, and system monitoring.',
+    tags: ['FastAPI', 'WebSocket', 'React', 'TT API', 'Real-time P&L'],
+    metrics: { strategies: '3 Types', latency: 'Sub-sec', monitoring: 'Live', api: 'TT API' },
+    icon: Server,
+    gradient: 'from-emerald-500/20 to-teal-600/20',
+    accentColor: 'text-emerald-400',
+    featured: false,
   },
   {
-    id: '4',
-    name: 'HFT Microstructure',
-    type: 'Market Making',
-    description: 'Order book dynamics and latency arbitrage in highly liquid markets',
-    metrics: {
-      return: 156.7,
-      sharpe: 4.1,
-      winRate: 58.9,
-      trades: 47283,
-    },
-    icon: Zap,
-    color: 'from-orange-500 to-red-600',
+    id: 'cl-intraday-research',
+    name: 'CL Intraday Spread Research',
+    type: 'Quantitative Research',
+    description: '18.3M minute-level bars across WTI crude oil forward curve. 37 hypotheses tested with institutional-grade methodology. Discovered bifurcated market structure and butterfly reversion strategy with 0.55-0.61 Sharpe ratio.',
+    tags: ['18.3M Bars', 'HMM', 'Hurst R/S', 'Wavelet MRA', '37 Hypotheses'],
+    metrics: { bars: '18.3M', hypotheses: '37', sharpe: '0.55-0.61', signals: '7.4K/yr' },
+    icon: BookOpen,
+    gradient: 'from-amber-500/20 to-orange-600/20',
+    accentColor: 'text-amber-400',
+    featured: false,
   },
 ]
 
-function StrategyCard({ strategy }: { strategy: Strategy }) {
-  const [isExpanded, setIsExpanded] = useState(false)
-  const Icon = strategy.icon
+function ProjectCard({ project, index }: { project: typeof projects[0], index: number }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, amount: 0.2 })
+  const Icon = project.icon
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    e.currentTarget.style.setProperty('--mouse-x', `${x}px`)
+    e.currentTarget.style.setProperty('--mouse-y', `${y}px`)
+  }
 
   return (
     <motion.div
-      layout
-      onClick={() => setIsExpanded(!isExpanded)}
-      className="glass-hover rounded-2xl cursor-pointer relative overflow-hidden"
-      whileHover={{ scale: 1.02, y: -4 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      ref={ref}
+      initial={{ opacity: 0, y: 40 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ delay: index * 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      onMouseMove={handleMouseMove}
+      className={`spotlight-card p-6 ${project.featured ? 'md:col-span-2' : ''}`}
     >
-      {/* Background gradient */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${strategy.color} opacity-5`} />
-
-      <div className="relative p-6 space-y-4">
+      <div className="relative z-10 space-y-4">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className={`p-3 rounded-xl bg-gradient-to-br ${strategy.color} bg-opacity-20`}>
-              <Icon className="w-6 h-6 text-white" />
+            <div className={`p-3 rounded-xl bg-gradient-to-br ${project.gradient}`}>
+              <Icon className={`w-5 h-5 ${project.accentColor}`} />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white">{strategy.name}</h3>
-              <p className="text-sm text-gray-400">{strategy.type}</p>
+              <h3 className="text-lg font-semibold text-white">{project.name}</h3>
+              <p className="text-xs text-gray-500 uppercase tracking-wider">{project.type}</p>
             </div>
           </div>
-
-          <motion.div
-            animate={{ rotate: isExpanded ? 180 : 0 }}
-            transition={{ duration: 0.3 }}
-            className="text-gray-400"
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-            </svg>
-          </motion.div>
         </div>
 
-        {/* Metrics Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="glass rounded-lg p-3">
-            <p className="text-xs text-gray-500 uppercase tracking-wider">Return</p>
-            <p className="text-2xl font-bold text-green-400">+{strategy.metrics.return}%</p>
-          </div>
-          <div className="glass rounded-lg p-3">
-            <p className="text-xs text-gray-500 uppercase tracking-wider">Sharpe</p>
-            <p className="text-2xl font-bold text-cyan-400">{strategy.metrics.sharpe}</p>
-          </div>
-          <div className="glass rounded-lg p-3">
-            <p className="text-xs text-gray-500 uppercase tracking-wider">Win Rate</p>
-            <p className="text-2xl font-bold text-purple-400">{strategy.metrics.winRate}%</p>
-          </div>
-          <div className="glass rounded-lg p-3">
-            <p className="text-xs text-gray-500 uppercase tracking-wider">Trades</p>
-            <p className="text-2xl font-bold text-gray-300">{strategy.metrics.trades.toLocaleString()}</p>
-          </div>
+        {/* Description */}
+        <p className="text-sm text-gray-400 leading-relaxed">{project.description}</p>
+
+        {/* Metrics */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {Object.entries(project.metrics).map(([key, value]) => (
+            <div key={key} className="rounded-lg bg-white/[0.02] border border-white/[0.04] p-3">
+              <p className="text-[10px] text-gray-600 uppercase tracking-wider">{key}</p>
+              <p className={`text-base font-semibold ${project.accentColor}`}>{value}</p>
+            </div>
+          ))}
         </div>
 
-        {/* Expanded content */}
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-4 overflow-hidden"
-            >
-              <div className="pt-4 border-t border-gray-800">
-                <p className="text-sm text-gray-300 leading-relaxed">
-                  {strategy.description}
-                </p>
-              </div>
-
-              {/* Mini chart placeholder */}
-              <div className="glass rounded-lg p-4 h-32 flex items-end justify-between gap-1">
-                {Array.from({ length: 24 }).map((_, i) => {
-                  const height = 20 + Math.random() * 80
-                  const isPositive = Math.random() > 0.3
-                  return (
-                    <motion.div
-                      key={i}
-                      initial={{ height: 0 }}
-                      animate={{ height: `${height}%` }}
-                      transition={{ delay: i * 0.02, duration: 0.3 }}
-                      className={`flex-1 rounded-sm ${
-                        isPositive ? 'bg-green-500' : 'bg-red-500'
-                      } opacity-70`}
-                    />
-                  )
-                })}
-              </div>
-
-              <button className="btn-luxury w-full relative z-10">
-                <span className="relative z-10">View Full Analysis</span>
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Tags */}
+        <div className="flex flex-wrap gap-2">
+          {project.tags.map((tag) => (
+            <span key={tag} className="tag">{tag}</span>
+          ))}
+        </div>
       </div>
     </motion.div>
   )
@@ -186,71 +117,32 @@ function StrategyCard({ strategy }: { strategy: Strategy }) {
 
 export default function Portfolio() {
   return (
-    <section className="min-h-screen px-6 py-20">
+    <section className="px-6 py-24">
       <div className="max-w-7xl mx-auto">
         {/* Section header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-16"
         >
-          <h2 className="text-5xl md:text-6xl font-bold mb-4">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">
-              Strategy Portfolio
-            </span>
+          <p className="text-xs text-cyan-400 uppercase tracking-[0.3em] mb-3">Projects</p>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            What I&apos;ve Built
           </h2>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            Diversified suite of systematic strategies across multiple asset classes and timeframes
+          <p className="text-lg text-gray-500 max-w-2xl">
+            Production trading systems, research platforms, and quantitative infrastructure
+            for energy futures markets
           </p>
         </motion.div>
 
-        {/* Strategies grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {strategies.map((strategy, index) => (
-            <motion.div
-              key={strategy.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1, duration: 0.5 }}
-            >
-              <StrategyCard strategy={strategy} />
-            </motion.div>
+        {/* Bento grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {projects.map((project, index) => (
+            <ProjectCard key={project.id} project={project} index={index} />
           ))}
         </div>
-
-        {/* Performance summary */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.4 }}
-          className="mt-16 luxury-card"
-        >
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            <div>
-              <h3 className="text-2xl font-bold mb-2">Portfolio Performance</h3>
-              <p className="text-gray-400">Combined strategies, optimized allocation</p>
-            </div>
-
-            <div className="flex gap-8">
-              <div className="text-center">
-                <p className="text-sm text-gray-500 mb-1">Total AUM</p>
-                <p className="text-3xl font-bold text-white">$47.2M</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-gray-500 mb-1">YTD Return</p>
-                <p className="text-3xl font-bold text-green-400">+112.7%</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-gray-500 mb-1">Correlation</p>
-                <p className="text-3xl font-bold text-cyan-400">0.23</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
       </div>
     </section>
   )

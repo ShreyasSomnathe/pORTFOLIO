@@ -1,259 +1,326 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { motion, useInView } from 'framer-motion'
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Area, AreaChart } from 'recharts'
+import { useState, useRef } from 'react'
+import { motion, useInView, AnimatePresence } from 'framer-motion'
+import { X, ZoomIn, ChevronDown, ChevronUp, Beaker, BarChart3, Waves, Zap, Clock, Brain } from 'lucide-react'
+import Image from 'next/image'
 
-const codeSnippet = `def optimize_portfolio(returns, constraints):
-    """
-    Optimize portfolio allocation using modern portfolio theory
-    with custom risk constraints and regime detection.
-    """
-    n_assets = returns.shape[1]
+const keyFindings = [
+  {
+    title: 'Bifurcated Information Structure',
+    icon: Brain,
+    color: 'text-cyan-400',
+    bg: 'from-cyan-500/10 to-blue-500/10',
+    stat: 'Hurst < 0.5 vs > 0.5',
+    description: 'Front-month spreads (1M-6M) are anti-persistent mean-reverting instruments with 2-3 minute half-lives, while 12M behaves like a persistent trending asset with 30-minute half-life — essentially a separate market mechanism.',
+  },
+  {
+    title: 'Beta Magnitude Collapse',
+    icon: BarChart3,
+    color: 'text-purple-400',
+    bg: 'from-purple-500/10 to-pink-500/10',
+    stat: 'Daily 2.5 → Intraday 0.02',
+    description: '1M beta collapses from ~2.5 at daily frequency to near zero (0.016) at minute-level. The 12M beta remains stable at ~0.19. Ordering 1M < 3M < 6M < 12M preserved across all timescales.',
+  },
+  {
+    title: 'Session Energy Cycles',
+    icon: Zap,
+    color: 'text-amber-400',
+    bg: 'from-amber-500/10 to-orange-500/10',
+    stat: '63-90% Compression Rate',
+    description: 'US session reaches 99% of its energy budget predictably. The exhaustion window (>80% budget) offers the highest probability reversal opportunity with 63-90% compression rate.',
+  },
+  {
+    title: 'EIA Paradox',
+    icon: Waves,
+    color: 'text-emerald-400',
+    bg: 'from-emerald-500/10 to-teal-500/10',
+    stat: 'Amplify OR 1.48x, Suppress 1M 0.74x',
+    description: 'EIA inventory announcements amplify outright volatility (1.48x) and 12M (1.28x) while simultaneously suppressing 1M volatility (0.74x). EIA provides clarity to front spreads while creating tail risk at the back.',
+  },
+  {
+    title: 'Butterfly Reversion',
+    icon: Clock,
+    color: 'text-rose-400',
+    bg: 'from-rose-500/10 to-pink-500/10',
+    stat: '2.3 min half-life (2,400x faster)',
+    description: 'Butterfly spread (2*6M - 3M - 12M) half-life collapses from 3.8 days at daily frequency to just 2.3 minutes — curvature dislocations self-correct almost instantly at minute resolution.',
+  },
+  {
+    title: 'Trade Archetype Winner',
+    icon: Beaker,
+    color: 'text-blue-400',
+    bg: 'from-blue-500/10 to-indigo-500/10',
+    stat: 'Sharpe 0.55-0.61 | 7,400 signals/yr',
+    description: 'Butterfly reversion is the clear alpha generator among 4 tested archetypes, delivering consistent 0.55-0.61 Sharpe with ~7,400 signals per year — abundant capacity for systematic exploitation.',
+  },
+]
 
-    # Calculate covariance matrix with exponential weighting
-    cov_matrix = returns.ewm(span=60).cov()
+const researchImages = [
+  { file: 'ih1_ih2_beta_convergence.png', title: 'Beta Convergence by Timescale', category: 'Beta Analysis' },
+  { file: 'ih3_nonlinear_beta.png', title: 'Nonlinear Beta by Volatility Quintile', category: 'Beta Analysis' },
+  { file: 'ih4_failed_propagation.png', title: 'Failed Propagation Hit Rates', category: 'Beta Analysis' },
+  { file: 'beta_by_session.png', title: 'Session-Conditional Beta', category: 'Beta Analysis' },
+  { file: 'ih5_cross_correlation.png', title: 'Cross-Tenor Correlation at Minute Lags', category: 'Lead-Lag' },
+  { file: 'irf_or_to_spreads.png', title: 'VAR Impulse Response Functions', category: 'Lead-Lag' },
+  { file: 'rolling_pca_evolution.png', title: 'Rolling PCA Explained Variance', category: 'Regimes' },
+  { file: 'regime_timeline.png', title: 'Regime Classification Timeline', category: 'Regimes' },
+  { file: 'regime_transition_heatmap.png', title: 'Regime Transition Probabilities', category: 'Regimes' },
+  { file: 'ih9_energy_budget.png', title: 'Session Energy Buildup Curves', category: 'Volatility' },
+  { file: 'ih11_bar_classification_or.png', title: 'Bar Type Distribution', category: 'Volatility' },
+  { file: 'hourly_volume_profile.png', title: 'Hourly Volume Profile', category: 'Volatility' },
+  { file: 'ih14_session_volatility.png', title: 'Session Volatility Comparison', category: 'Events' },
+  { file: 'ih16_eia_propagation.png', title: 'EIA Volatility Ratio Paradox', category: 'Events' },
+  { file: 'ih17_settlement_window.png', title: 'Settlement Window Volatility', category: 'Events' },
+  { file: 'ih20_hurst_exponents.png', title: 'Hurst Exponents by Tenor & Timescale', category: 'Fractal' },
+  { file: 'ih21_butterfly_halflife.png', title: 'Butterfly AR(1) Decay', category: 'Fractal' },
+  { file: 'ih22_wavelet_decomposition.png', title: 'Wavelet Energy Distribution', category: 'Fractal' },
+  { file: 'ih23_correlation_breakdown.png', title: 'Correlation Breakdown Forward Returns', category: 'Advanced' },
+  { file: 'ih27_entropy.png', title: 'Shannon Entropy Evolution', category: 'Advanced' },
+  { file: 'ih29_snapback_elasticity.png', title: 'Snap-Back Reversion Rates', category: 'Advanced' },
+  { file: 'trade_archetypes_summary.png', title: 'Trade Archetype Comparison', category: 'Strategies' },
+]
 
-    # Define objective: maximize Sharpe ratio
-    def objective(weights):
-        portfolio_return = np.sum(returns.mean() * weights) * 252
-        portfolio_std = np.sqrt(
-            np.dot(weights.T, np.dot(cov_matrix, weights))
-        ) * np.sqrt(252)
-        return -portfolio_return / portfolio_std
+const categories = ['All', 'Beta Analysis', 'Lead-Lag', 'Regimes', 'Volatility', 'Events', 'Fractal', 'Advanced', 'Strategies']
 
-    # Constraints: weights sum to 1, long-only
-    constraints = (
-        {'type': 'eq', 'fun': lambda x: np.sum(x) - 1},
-    )
-    bounds = tuple((0, 0.25) for _ in range(n_assets))
+const methods = [
+  'OLS Regression', 'Vector Autoregression (VAR)', 'Granger Causality', 'Hidden Markov Models',
+  'Principal Component Analysis', 'Hurst R/S Analysis', 'Wavelet MRA (Daubechies-4)',
+  'AR(1) Half-Life', 'Shannon Entropy', 'Markov Transition Matrices',
+  'Kalman Filtering', 'Monte Carlo Simulation'
+]
 
-    # Run optimization
-    result = scipy.optimize.minimize(
-        objective,
-        x0=np.array([1/n_assets] * n_assets),
-        method='SLSQP',
-        bounds=bounds,
-        constraints=constraints
-    )
-
-    return result.x`
-
-function TypingCode() {
-  const [displayedCode, setDisplayedCode] = useState('')
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const ref = useRef<HTMLDivElement>(null)
-  const isInView = useInView(ref, { once: true, amount: 0.3 })
-
-  useEffect(() => {
-    if (!isInView) return
-
-    if (currentIndex < codeSnippet.length) {
-      const timeout = setTimeout(() => {
-        setDisplayedCode(codeSnippet.slice(0, currentIndex + 1))
-        setCurrentIndex(currentIndex + 1)
-      }, 10)
-
-      return () => clearTimeout(timeout)
-    }
-  }, [currentIndex, isInView])
-
-  return (
-    <div ref={ref} className="glass rounded-xl p-6 overflow-hidden">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-3 h-3 rounded-full bg-red-500" />
-        <div className="w-3 h-3 rounded-full bg-yellow-500" />
-        <div className="w-3 h-3 rounded-full bg-green-500" />
-        <span className="ml-auto text-xs text-gray-500">portfolio_optimizer.py</span>
-      </div>
-
-      <pre className="font-mono text-sm text-gray-300 overflow-x-auto">
-        <code>{displayedCode}</code>
-        {currentIndex < codeSnippet.length && (
-          <motion.span
-            animate={{ opacity: [1, 0] }}
-            transition={{ duration: 0.8, repeat: Infinity }}
-            className="inline-block w-2 h-5 bg-cyan-400 ml-1"
-          />
-        )}
-      </pre>
-    </div>
-  )
-}
-
-function PerformanceChart() {
-  const ref = useRef<HTMLDivElement>(null)
-  const isInView = useInView(ref, { once: true, amount: 0.5 })
-
-  // Generate sample data
-  const data = Array.from({ length: 30 }, (_, i) => ({
-    day: i,
-    strategy: 100 + Math.random() * 80 + i * 3,
-    benchmark: 100 + Math.random() * 30 + i * 1.2,
-  }))
+function FindingCard({ finding, index }: { finding: typeof keyFindings[0], index: number }) {
+  const [expanded, setExpanded] = useState(false)
+  const Icon = finding.icon
 
   return (
     <motion.div
-      ref={ref}
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={isInView ? { opacity: 1, scale: 1 } : {}}
-      transition={{ duration: 0.8 }}
-      className="glass rounded-xl p-6"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      onClick={() => setExpanded(!expanded)}
+      className="bento-card cursor-pointer group"
     >
-      <div className="mb-4">
-        <h3 className="text-lg font-bold text-white mb-1">Backtest Performance</h3>
-        <p className="text-sm text-gray-400">Strategy vs Benchmark (30-day rolling)</p>
-      </div>
-
-      <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data}>
-            <defs>
-              <linearGradient id="colorStrategy" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#00ffff" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#00ffff" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="colorBenchmark" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#888888" stopOpacity={0.2} />
-                <stop offset="95%" stopColor="#888888" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <XAxis dataKey="day" stroke="#444" hide />
-            <YAxis stroke="#444" hide />
-            <Area
-              type="monotone"
-              dataKey="strategy"
-              stroke="#00ffff"
-              strokeWidth={2}
-              fill="url(#colorStrategy)"
-              animationDuration={2000}
-            />
-            <Area
-              type="monotone"
-              dataKey="benchmark"
-              stroke="#888888"
-              strokeWidth={2}
-              fill="url(#colorBenchmark)"
-              animationDuration={2000}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div className="flex items-center gap-6 mt-4">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-cyan-400" />
-          <span className="text-sm text-gray-400">Strategy</span>
+      <div className="flex items-start gap-4">
+        <div className={`p-2.5 rounded-xl bg-gradient-to-br ${finding.bg} shrink-0`}>
+          <Icon className={`w-5 h-5 ${finding.color}`} />
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-gray-500" />
-          <span className="text-sm text-gray-400">Benchmark</span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-semibold text-white">{finding.title}</h4>
+            <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+              <ChevronDown className="w-4 h-4 text-gray-600" />
+            </motion.div>
+          </div>
+          <p className={`text-xs font-mono mt-1 ${finding.color}`}>{finding.stat}</p>
+
+          <AnimatePresence>
+            {expanded && (
+              <motion.p
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="text-xs text-gray-500 mt-2 leading-relaxed overflow-hidden"
+              >
+                {finding.description}
+              </motion.p>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </motion.div>
   )
 }
 
-const researchTopics = [
-  {
-    title: 'Machine Learning for Alpha Generation',
-    description: 'Deep learning models for pattern recognition in high-frequency market microstructure',
-    tags: ['Neural Networks', 'Feature Engineering', 'Ensemble Methods'],
-  },
-  {
-    title: 'Regime Detection & Switching',
-    description: 'Hidden Markov models and state-space approaches for market regime identification',
-    tags: ['HMM', 'Kalman Filters', 'Dynamic Systems'],
-  },
-  {
-    title: 'Portfolio Optimization',
-    description: 'Multi-objective optimization with risk parity and factor-based constraints',
-    tags: ['Convex Optimization', 'Risk Management', 'Factor Models'],
-  },
-]
+function ImageGallery() {
+  const [selectedCategory, setSelectedCategory] = useState('All')
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null)
+
+  const filtered = selectedCategory === 'All'
+    ? researchImages
+    : researchImages.filter(img => img.category === selectedCategory)
+
+  return (
+    <div className="space-y-6">
+      {/* Category filter */}
+      <div className="flex flex-wrap gap-2">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setSelectedCategory(cat)}
+            className={`px-3 py-1.5 text-xs rounded-lg transition-all duration-300 ${
+              selectedCategory === cat
+                ? 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-400'
+                : 'border border-white/[0.06] text-gray-500 hover:text-gray-300 hover:border-white/10'
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {/* Image grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <AnimatePresence mode="popLayout">
+          {filtered.map((img, index) => (
+            <motion.div
+              key={img.file}
+              layout
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.3, delay: index * 0.03 }}
+              onClick={() => setLightboxImage(img.file)}
+              className="group relative overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.02] cursor-pointer hover:border-cyan-500/20 transition-all duration-300"
+            >
+              <div className="aspect-[4/3] relative">
+                <Image
+                  src={`/research/${img.file}`}
+                  alt={img.title}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
+                <div className="absolute bottom-0 left-0 right-0 p-3">
+                  <p className="text-xs font-medium text-white">{img.title}</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">{img.category}</p>
+                </div>
+                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="p-1.5 rounded-lg bg-white/10 backdrop-blur-sm">
+                    <ZoomIn className="w-4 h-4 text-white" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {lightboxImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="lightbox-backdrop flex items-center justify-center p-6"
+            onClick={() => setLightboxImage(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="relative max-w-5xl w-full max-h-[85vh]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setLightboxImage(null)}
+                className="absolute -top-12 right-0 p-2 rounded-lg glass text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="relative w-full h-[70vh] rounded-xl overflow-hidden">
+                <Image
+                  src={`/research/${lightboxImage}`}
+                  alt="Research visualization"
+                  fill
+                  className="object-contain"
+                  sizes="100vw"
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
 
 export default function Research() {
+  const [showGallery, setShowGallery] = useState(false)
+
   return (
-    <section className="min-h-screen px-6 py-20">
+    <section className="px-6 py-24">
       <div className="max-w-7xl mx-auto">
         {/* Section header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-16"
         >
-          <h2 className="text-5xl md:text-6xl font-bold mb-4">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
-              Research & Development
-            </span>
+          <p className="text-xs text-purple-400 uppercase tracking-[0.3em] mb-3">Research</p>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            CL Intraday Forward Curve Microstructure
           </h2>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            Cutting-edge quantitative research in systematic trading and portfolio optimization
+          <div className="flex flex-wrap items-center gap-4 mb-4">
+            <span className="tag">18.3M Minute Bars</span>
+            <span className="tag">37 Hypotheses</span>
+            <span className="tag">22 Visualizations</span>
+            <span className="tag">2018-2026</span>
+          </div>
+          <p className="text-lg text-gray-500 max-w-3xl">
+            How does information propagate across the crude oil forward curve within a single trading day?
+            This framework analyzes minute-level dynamics across WTI outright + calendar spreads, revealing
+            a bifurcated information structure with exploitable divergences.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          {/* Code snippet */}
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-          >
-            <TypingCode />
-          </motion.div>
-
-          {/* Performance chart */}
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-          >
-            <PerformanceChart />
-          </motion.div>
-        </div>
-
-        {/* Research topics */}
-        <div className="space-y-6">
-          {researchTopics.map((topic, index) => (
-            <motion.div
-              key={topic.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1, duration: 0.6 }}
-              className="luxury-card"
-            >
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-white mb-2">{topic.title}</h3>
-                  <p className="text-gray-400 mb-3">{topic.description}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {topic.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="px-3 py-1 text-xs rounded-full glass border border-cyan-500/30 text-cyan-400"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="btn-luxury whitespace-nowrap"
-                >
-                  <span className="relative z-10">Read Paper</span>
-                </motion.button>
-              </div>
-            </motion.div>
+        {/* Key Findings */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-16">
+          {keyFindings.map((finding, index) => (
+            <FindingCard key={finding.title} finding={finding} index={index} />
           ))}
         </div>
+
+        {/* Methodology */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="bento-card mb-8"
+        >
+          <h3 className="text-sm font-semibold text-white mb-4">Quantitative Methods</h3>
+          <div className="flex flex-wrap gap-2">
+            {methods.map((method) => (
+              <span key={method} className="tag">{method}</span>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Gallery toggle */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+        >
+          <button
+            onClick={() => setShowGallery(!showGallery)}
+            className="btn-primary mb-8"
+          >
+            {showGallery ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            <span>{showGallery ? 'Hide' : 'View'} Research Visualizations ({researchImages.length})</span>
+          </button>
+
+          <AnimatePresence>
+            {showGallery && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="overflow-hidden"
+              >
+                <ImageGallery />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </div>
     </section>
   )

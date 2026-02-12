@@ -44,7 +44,7 @@ export default function Loading() {
           className="text-center"
         >
           <h2 className="text-xl font-semibold text-white mb-2">
-            Loading Excellence
+            Initializing
           </h2>
           <div className="flex items-center gap-1">
             <motion.div
