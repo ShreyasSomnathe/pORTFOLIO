@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { motion, useInView, AnimatePresence } from 'framer-motion'
-import { X, ZoomIn, ChevronDown, ChevronUp, Beaker, BarChart3, Waves, Zap, Clock, Brain } from 'lucide-react'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { X, ZoomIn, ChevronDown, Beaker, BarChart3, Waves, Zap, Clock, Brain } from 'lucide-react'
 import Image from 'next/image'
 
 const keyFindings = [
@@ -51,8 +51,8 @@ const keyFindings = [
     icon: Beaker,
     color: 'text-blue-400',
     bg: 'from-blue-500/10 to-indigo-500/10',
-    stat: 'Sharpe 0.55-0.61 | 7,400 signals/yr',
-    description: 'Butterfly reversion is the clear alpha generator among 4 tested archetypes, delivering consistent 0.55-0.61 Sharpe with ~7,400 signals per year — abundant capacity for systematic exploitation.',
+    stat: '7,400 signals/yr | Top Archetype',
+    description: 'Butterfly reversion is the clear alpha generator among 4 tested archetypes, delivering consistent edge with ~7,400 signals per year — abundant capacity for systematic exploitation.',
   },
 ]
 
@@ -142,8 +142,15 @@ function ImageGallery() {
     ? researchImages
     : researchImages.filter(img => img.category === selectedCategory)
 
+  // Group filtered images by category
+  const grouped = filtered.reduce((acc, img) => {
+    if (!acc[img.category]) acc[img.category] = []
+    acc[img.category].push(img)
+    return acc
+  }, {} as Record<string, typeof researchImages>)
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Category filter */}
       <div className="flex flex-wrap gap-2">
         {categories.map((cat) => (
@@ -161,43 +168,64 @@ function ImageGallery() {
         ))}
       </div>
 
-      {/* Image grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <AnimatePresence mode="popLayout">
-          {filtered.map((img, index) => (
+      {/* Grouped plot cards */}
+      {Object.entries(grouped).map(([category, images]) => (
+        <div key={category}>
+          {selectedCategory === 'All' && (
             <motion.div
-              key={img.file}
-              layout
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.3, delay: index * 0.03 }}
-              onClick={() => setLightboxImage(img.file)}
-              className="group relative overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.02] cursor-pointer hover:border-cyan-500/20 transition-all duration-300"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              className="flex items-center gap-3 mb-4"
             >
-              <div className="aspect-[4/3] relative">
-                <Image
-                  src={`/research/${img.file}`}
-                  alt={img.title}
-                  fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
-                <div className="absolute bottom-0 left-0 right-0 p-3">
-                  <p className="text-xs font-medium text-white">{img.title}</p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">{img.category}</p>
-                </div>
-                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="p-1.5 rounded-lg bg-white/10 backdrop-blur-sm">
-                    <ZoomIn className="w-4 h-4 text-white" />
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-[0.2em]">{category}</h4>
+              <div className="flex-1 h-px bg-white/[0.06]" />
+              <span className="text-[10px] text-gray-600 font-mono">{images.length} plots</span>
+            </motion.div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            {images.map((img, index) => (
+              <motion.div
+                key={img.file}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.1 }}
+                transition={{ delay: index * 0.05, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                onClick={() => setLightboxImage(img.file)}
+                className="plot-card cursor-pointer group"
+              >
+                {/* Title bar */}
+                <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.04]">
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 rounded-full bg-red-500/40" />
+                      <div className="w-2 h-2 rounded-full bg-yellow-500/40" />
+                      <div className="w-2 h-2 rounded-full bg-green-500/40" />
+                    </div>
+                    <p className="text-xs font-medium text-gray-300 ml-1">{img.title}</p>
+                  </div>
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <ZoomIn className="w-3.5 h-3.5 text-gray-500" />
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
+
+                {/* Plot image */}
+                <div className="relative p-3">
+                  <div className="relative w-full aspect-[16/10] rounded-lg overflow-hidden bg-[#0d1117]">
+                    <Image
+                      src={`/research/${img.file}`}
+                      alt={img.title}
+                      fill
+                      className="object-contain plot-invert transition-transform duration-500 group-hover:scale-[1.02]"
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      ))}
 
       {/* Lightbox */}
       <AnimatePresence>
@@ -214,24 +242,27 @@ function ImageGallery() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="relative max-w-5xl w-full max-h-[85vh]"
+              className="relative max-w-6xl w-full max-h-[90vh]"
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={() => setLightboxImage(null)}
-                className="absolute -top-12 right-0 p-2 rounded-lg glass text-gray-400 hover:text-white transition-colors"
+                className="absolute -top-12 right-0 p-2 rounded-lg glass text-gray-400 hover:text-white transition-colors z-10"
               >
                 <X className="w-5 h-5" />
               </button>
-              <div className="relative w-full h-[70vh] rounded-xl overflow-hidden">
+              <div className="relative w-full h-[80vh] rounded-2xl overflow-hidden bg-[#0d1117] border border-white/[0.06]">
                 <Image
                   src={`/research/${lightboxImage}`}
                   alt="Research visualization"
                   fill
-                  className="object-contain"
+                  className="object-contain plot-invert p-4"
                   sizes="100vw"
                 />
               </div>
+              <p className="text-center text-xs text-gray-500 mt-3">
+                {researchImages.find(i => i.file === lightboxImage)?.title}
+              </p>
             </motion.div>
           </motion.div>
         )}
@@ -241,8 +272,6 @@ function ImageGallery() {
 }
 
 export default function Research() {
-  const [showGallery, setShowGallery] = useState(false)
-
   return (
     <section className="px-6 py-24">
       <div className="max-w-7xl mx-auto">
@@ -283,7 +312,7 @@ export default function Research() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="bento-card mb-8"
+          className="bento-card mb-12"
         >
           <h3 className="text-sm font-semibold text-white mb-4">Quantitative Methods</h3>
           <div className="flex flex-wrap gap-2">
@@ -293,33 +322,19 @@ export default function Research() {
           </div>
         </motion.div>
 
-        {/* Gallery toggle */}
+        {/* Research Visualizations — inline */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
-          <button
-            onClick={() => setShowGallery(!showGallery)}
-            className="btn-primary mb-8"
-          >
-            {showGallery ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-            <span>{showGallery ? 'Hide' : 'View'} Research Visualizations ({researchImages.length})</span>
-          </button>
-
-          <AnimatePresence>
-            {showGallery && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                className="overflow-hidden"
-              >
-                <ImageGallery />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <div className="flex items-center gap-4 mb-8">
+            <h3 className="text-lg font-semibold text-white">Visualizations</h3>
+            <div className="flex-1 h-px bg-white/[0.06]" />
+            <span className="text-xs text-gray-600 font-mono">{researchImages.length} plots</span>
+          </div>
+          <ImageGallery />
         </motion.div>
       </div>
     </section>

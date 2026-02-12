@@ -218,6 +218,22 @@
   .lightbox-backdrop {
     @apply fixed inset-0 bg-black/90 backdrop-blur-xl z-50;
   }
+
+  .plot-invert {
+    filter: invert(0.88) hue-rotate(180deg) saturate(1.25) contrast(1.05);
+  }
+
+  .plot-card {
+    @apply relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.015];
+    transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .plot-card:hover {
+    background: rgba(255, 255, 255, 0.035);
+    border-color: rgba(0, 229, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 229, 255, 0.04);
+  }
 }
 
 @layer utilities {
