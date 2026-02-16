@@ -11,7 +11,7 @@ const projects = [
     type: 'Production Trading System',
     description: 'Production ML system for crude calendar spread trading using PCA of forward curve (level/slope/curvature), VAR for lead-lag relationships, and Kalman filtering for regime detection. Integrated EIA, FRED, Cushing inventory, and refinery data across 3 live strategies with FastAPI execution and PostgreSQL.',
     tags: ['PCA', 'VAR', 'Kalman Filter', 'FastAPI', 'PostgreSQL', 'EIA/FRED'],
-    metrics: { sharpe: '3.4', profits: '$200K+', strategies: '3 Live', roi: '50%' },
+    metrics: { sharpe: '3.4', strategies: '3 Live', assets: 'Energy Futures' },
     icon: TrendingUp,
     gradient: 'from-cyan-500/20 to-blue-600/20',
     accentColor: 'text-cyan-400',

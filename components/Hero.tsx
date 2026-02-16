@@ -72,7 +72,7 @@ function StatusBadge() {
       <span className="text-gray-400">Available for opportunities</span>
       <span className="text-white/20">|</span>
       <MapPin className="w-3 h-3 text-gray-500" />
-      <span className="text-gray-400">Hyderabad, India</span>
+      <span className="text-gray-400">Gurgaon, India</span>
     </motion.div>
   )
 }
@@ -132,7 +132,7 @@ export default function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-12"
+          className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-12"
         >
           <AnimatedMetric
             label="Sharpe Ratio"
@@ -141,19 +141,11 @@ export default function Hero() {
             delay={800}
           />
           <AnimatedMetric
-            label="Trading Profits"
-            value={200}
-            prefix="$"
-            suffix="K+"
+            label="Live Strategies"
+            value={3}
+            suffix="+"
             decimals={0}
             delay={1000}
-          />
-          <AnimatedMetric
-            label="Return on Investment"
-            value={50}
-            suffix="%"
-            decimals={0}
-            delay={1200}
           />
         </motion.div>
 

@@ -116,7 +116,7 @@ export default function About() {
         >
           <div className="flex items-center gap-3">
             <MapPin className="w-4 h-4 text-gray-500" />
-            <span className="text-sm text-gray-400">Based in Hyderabad, India</span>
+            <span className="text-sm text-gray-400">Based in Gurgaon, India</span>
           </div>
         </motion.div>
       </div>

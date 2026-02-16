@@ -6,7 +6,7 @@ import { Building2, GraduationCap, Award } from 'lucide-react'
 const experience = [
   {
     company: 'Blueberry Capital',
-    location: 'Hyderabad, India',
+    location: 'Gurgaon, India',
     role: 'Quantitative Researcher / Trader',
     period: 'Aug 2025 - Present',
     highlights: [
@@ -23,8 +23,8 @@ const experience = [
     role: 'Quantitative Trader',
     period: 'May 2023 - May 2025',
     highlights: [
-      'Developed statistical models for energy futures (crude oil, natural gas, heating oil, RBOB, gasoil) generating alpha; delivered $200K+ annual trading profits (50% ROI)',
-      'Executed algorithmic strategies: event-driven, trend-following on S&P 500, and mid-frequency arbitrage boxes for consistent daily profits',
+      'Developed statistical models for energy futures (crude oil, natural gas, heating oil, RBOB, gasoil) generating alpha across multiple contract maturities',
+      'Executed algorithmic strategies: event-driven, trend-following, and mid-frequency arbitrage boxes for consistent daily profits',
       'Applied regression analysis for hedge ratios across Abu Dhabi crude, Brent, WTI; Monte Carlo stress testing; seasonal analysis for strategy optimization',
       'Managed multi-commodity portfolio (intraday to seasonal): mean-reverting, trend-following, arbitrage, inter-product and calendar spread strategies',
     ],
